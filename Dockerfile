@@ -1,9 +1,7 @@
-ARG PGVECTORS_TAG=pg16-v0.2.1-amd64
-ARG BITNAMI_TAG=16.4.0
 FROM scratch as nothing
-FROM tensorchord/pgvecto-rs-binary:${PGVECTORS_TAG} as binary
+FROM tensorchord/pgvecto-rs-binary:pg16-v0.2.1-amd64 as binary
+FROM docker.io/bitnami/postgresql:16.4.0
 
-FROM docker.io/bitnami/postgresql:${BITNAMI_TAG}
 COPY --from=binary /pgvecto-rs-binary-release.deb /tmp/vectors.deb
 USER root
 RUN apt-get install -y /tmp/vectors.deb && rm -f /tmp/vectors.deb && \
