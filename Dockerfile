@@ -1,13 +1,13 @@
 FROM alpine:latest AS deb
 
 RUN apk add --no-cache curl ca-certificates
-RUN curl https://github.com/tensorchord/VectorChord/releases/download/0.3.0/postgresql-16-vchord_0.3.0-1_amd64.deb -Lo /tmp/vchord.deb
+RUN curl https://github.com/tensorchord/VectorChord/releases/download/0.3.0/postgresql-17-vchord_0.3.0-1_amd64.deb -Lo /tmp/vchord.deb
 
 
-FROM docker.io/bitnami/postgresql:16.6.0
+FROM docker.io/bitnami/postgresql:17.5.0
 
 COPY --from=deb /tmp/vchord.deb /tmp/vchord.deb
-COPY --from=tensorchord/pgvecto-rs-binary:pg16-v0.3.0-amd64 /pgvecto-rs-binary-release.deb /tmp/vectors.deb
+COPY --from=tensorchord/pgvecto-rs-binary:pg17-v0.4.0-amd64 /pgvecto-rs-binary-release.deb /tmp/vectors.deb
 USER root
 RUN apt-get install -y /tmp/vchord.deb && rm -f /tmp/vchord.deb && \
     apt-get install -y /tmp/vectors.deb && rm -f /tmp/vectors.deb && \
