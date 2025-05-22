@@ -1,6 +1,8 @@
-# Bitnami Postgres images w/ pgvecto.rs
+# Bitnami Postgres images w/ pgvecto.rs and vchord
 
-I'm using the [Bitnami postgres helm](https://github.com/bitnami/charts/blob/main/bitnami/postgresql/README.md) chart as my backing store for immich (not using the immich helm chart).  Immich requires [pgvecto.rs](https://pgvecto.rs/) installed, which isn't part of the bitnami image.  This image and the subseqent configs (listed below) are how I use this.
+I'm using the [Bitnami postgres helm](https://github.com/bitnami/charts/blob/main/bitnami/postgresql/README.md) chart as my backing store for immich(not using the immich helm chart).  
+
+Immich use to require [pgvecto.rs](https://pgvecto.rs/) installed and now [vchord](https://github.com/tensorchord/VectorChord), which isn't part of the bitnami image.
 
 ## Usage
 
@@ -11,37 +13,15 @@ In your `values.yaml`:
 ```yaml
 image:
   registry: ghcr.io
-  repository: aaronspruit/bitnami-pg-pgvecto-rs
-  tag: pg16.4.0-v0.2.1-v2
+  repository: grzesjam/bitnami-pg-pgvecto-rs-vchord
+  tag: pg16.6-pgv0.3.0-vchord0.3.0
 primary:
-  # this adds the libraries
-  extendedConfiguration: |-
-    shared_preload_libraries = 'vectors.so'
   initdb:
-    user: postgres
     scripts: 
-      # this script installs the extension
-      # and then updates the database that was already created
-      # https://github.com/immich-app/immich/discussions/7252#discussioncomment-8534336
-      # https://docs.pgvecto.rs/getting-started/installation.html#from-debian-package 
       00-create-extensions.sql: |
-        \getenv dbname POSTGRES_DATABASE
-        \getenv dbuser POSTGRES_USER
-        \c :dbname
-        ALTER SYSTEM SET search_path TO "$user", public, vectors;
         CREATE EXTENSION IF NOT EXISTS cube;
         CREATE EXTENSION IF NOT EXISTS earthdistance;
         CREATE EXTENSION IF NOT EXISTS vectors;
-        ALTER DATABASE :dbname OWNER TO :dbuser;
-        GRANT ALL ON SCHEMA vectors TO :dbuser;
-      # need to restart to finish loading pgvecto.rs
-      01-restart.sh: |
-        #!/bin/sh
-        pg_ctl restart
-      # after restart, the index_stat table is created, so need to modify that now too
-      02-grant-index.sql: |
-        \getenv dbname POSTGRES_DATABASE
-        \getenv dbuser POSTGRES_USER
-        \c :dbname
-        GRANT SELECT ON TABLE pg_vector_index_stat to :dbuser;
+        CREATE EXTENSION IF NOT EXISTS vchord;
+
 ```
